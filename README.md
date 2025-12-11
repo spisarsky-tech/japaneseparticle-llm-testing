@@ -10,16 +10,18 @@ For use of this code, install the following packages:
 - torch 
 
 if using Google Colab:
+```
 !pip3 install nltk pandas
 !pip3 install torch torchvision
 !pip3 install transformers accelerate
 
 import pandas as pd 
 import torch 
-
+```
 For the device, you can use either a GPU or a CPU:
+```
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
+```
 # Description 
 This code allows you to import a language model of your choosing, 
 input synthetic sentence data sets, and specify particles of interest. 
@@ -32,7 +34,29 @@ This can be exported and used to generate graphs or other tables,
 using either seaborn or R. 
 
 # Running 
-make sure packages are installed prior to running the code. alter code for appropriate model; code is using a model used in the original paper
+Make sure packages are installed prior to running the code. 
+
+Make sure your LLM does not tokenize particles as two separate tokens.
+
+```
+from transformers import AutoTokenizer, AutoModelForMaskedLM
+
+tokenizer = AutoTokenizer.from_pretrained('xlm-roberta-large')
+model = AutoModelForMaskedLM.from_pretrained("xlm-roberta-large")
+
+# test model with particles of interest
+particles = ['で']
+particle_ids = tokenizer.convert_tokens_to_ids(particles)
+particle = tokenizer.convert_ids_to_tokens(particle_ids)
+
+# print particle as a single token
+particle
+```
+
+To import the model you would like to use, as well as tokenizers:
+```
+# alter code for appropriate models you wish to use
+# LLM in this model comes from the model used in the original paper
 
 from transformers import AutoModelForMaskedLM
 from transformers import AutoTokenizer
@@ -40,19 +64,27 @@ model_id = "FacebookAI/xlm-roberta-large"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForMaskedLM.from_pretrained(model_id)
 model.eval()
+```
 
-input particles to be used to calculate log probs, input sentence data set, example includes sentences used for the original paper
+To identify particles of interest and input data set:
+```
+# input particles to be focused on to calculate the log probs
+# input sentence data set
+
 particles = ['で', 'に']
 particle_ids = tokenizer.convert_tokens_to_ids(particles)
-
 sentences = ["図書館[MASK]勉強します。", "公園[MASK]休みます。",
              "学校[MASK]習います。", "バス[MASK]待ちます。",
              "図書館[MASK]行きます。", "公園[MASK]散歩します。",
              "学校[MASK]走ります。", "バス[MASK]出ます。"]
+```
 
+To generate results:
 
-calculate log probs and organize into a table based on sentence,
-particle, and index position of the particle
+```
+# Calculate log probs
+# Create a DataFrame that organizes by sentence, particle,
+# masked index position, and the log probs.
 
 results = []
 for sentence in sentences:
@@ -75,6 +107,7 @@ results = pd.DataFrame(results)
 results["particle"] = [tokenizer.convert_ids_to_tokens(particle)
                       for particle in results["particle"]]
 results
+```
 
 # Citation
 Hiwatari-Brown. (2025). Mono- and Multilingual Language Models and Japanese Particle Prediction.
